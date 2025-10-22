@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Session History{% endblock %}
+{% block head_extra %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+    <div class="container history-container">
+        <h1 class="section-title animate-slide-in">Session History</h1>
+        <p style="text-align: center; max-width: 600px; margin: -1.5rem auto 2rem auto; opacity: 0.8;" class="animate-slide-in">
+            Review your past wellness sessions to track trends over time.
+        </p>
+
+        <div class="card animate-slide-in">
+            <h2>Health Score Over Time</h2>
+            <div class="chart-container" style="height: 250px;"> <canvas id="history-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="card animate-slide-in">
+            <h2>Recent Sessions</h2>
+            <div class="table-wrapper">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Dominant Emotion</th>
+                            <th>Avg. Health Score</th>
+                            <th>Fatigue Events</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr><td colspan="4" style="text-align: center; padding: 2rem;">Loading history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="{{ url_for('static', filename='history.js') }}"></script>
+{% endblock %}

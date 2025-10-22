@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<section class="section-padding">
+    <div class="container auth-container">
+        <div class="card auth-card animate-slide-in">
+            <h2 style="text-align: center;">Join or Create a Team</h2>
+            <form method="POST" action="/register">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required minlength="6">
+                     <small style="font-size: 0.8rem; color: #666;">Minimum 6 characters</small>
+                </div>
+                <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid var(--border-color);">
+                <p style="text-align: center; margin: 1rem 0;"><strong>Option 1: Create New Team</strong></p>
+                <div class="form-group">
+                    <label for="team_name">New Team Name</label>
+                    <input type="text" id="team_name" name="team_name" placeholder="e.g., Office Wellness Group">
+                </div>
+                <p style="text-align: center; margin: 1.5rem 0 1rem 0;"><strong>OR</strong></p>
+                <p style="text-align: center; margin: 1rem 0;"><strong>Option 2: Join Existing Team</strong></p>
+                <div class="form-group">
+                    <label for="invite_code">Invite Code</label>
+                    <input type="text" id="invite_code" name="invite_code" placeholder="Enter code from admin">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Register</button>
+            </form>
+            <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

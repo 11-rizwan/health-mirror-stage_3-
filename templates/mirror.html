@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Live Monitoring{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+<div class="container app-container-classic"> <div class="video-section animate-slide-in">
+        <video id="video" width="640" height="480" autoplay playsinline muted></video>
+        <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+        <div id="status-message">Initializing Webcam...</div>
+        <div class="session-controls">
+            <button id="end-session-btn" class="btn btn-alert">End & Save Session</button>
+            <button id="start-session-btn" class="btn" style="display: none;">Start New Session</button>
+            <div id="save-status"></div>
+        </div>
+    </div>
+
+    <div class="info-section animate-slide-in">
+        <h2 class="section-title" style="margin-bottom: 1.5rem;">Real-Time Analysis</h2>
+        <div class="card info-card">
+            <p><strong>Emotion:</strong> <span id="emotion-text">--</span></p>
+        </div>
+        <div class="card info-card" id="fatigue-card">
+            <p><strong>Fatigue Alert:</strong> <span id="fatigue-alert">NO</span></p>
+        </div>
+        <div class="card info-card">
+            <h3>Score: <span id="health-score">--</span>/100</h3>
+        </div>
+        <div class="card recommendations-card">
+            <h4>Recommendations</h4>
+            <ul id="recommendations-list">
+                <li>Waiting for analysis...</li>
+            </ul>
+        </div>
+         <button id="test-notification-btn" class="btn" style="margin-top: 1rem;">Test Notification</button>
+    </div>
+
+</div>
+</section>
+
+{% block scripts %}
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - AI Health Mirror{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+
+    <section class="hero-section animate-slide-in">
+        <div class="container hero-content">
+            <h1>Your Personal Wellness Companion</h1>
+            <p class="subtitle">Stay mindful of your emotional and physical state with real-time AI analysis.</p>
+            <a href="/monitoring" class="btn btn-hero">Launch the Mirror ✨</a>
+        </div>
+        </section>
+
+    <section class="intro-section section-padding">
+        <div class="container intro-content animate-slide-in">
+             <div class="intro-icon">🧠</div> <h2>Understand Your Well-being Instantly</h2>
+            <p>The AI Health Mirror uses your device's camera and intelligent algorithms to provide gentle, real-time feedback on your emotions and fatigue levels, helping you build healthier screen-time habits.</p>
+        </div>
+    </section>
+
+    <section class="features-section section-padding">
+        <div class="container">
+            <h2 class="section-title animate-slide-in">Core Features</h2>
+            <div class="features-grid-classic animate-slide-in">
+                
+                <div class="feature-card-classic">
+                     <div class="feature-icon">😊</div>
+                    <h4>Emotion Analysis</h4>
+                    <p>Detects 7 core emotions to enhance self-awareness.</p>
+                </div>
+                <div class="feature-card-classic">
+                     <div class="feature-icon">😴</div>
+                    <h4>Fatigue Detection</h4>
+                    <p>Monitors eye closure patterns for timely break reminders.</p>
+                </div>
+                <div class="feature-card-classic">
+                     <div class="feature-icon">💯</div>
+                    <h4>Wellness Score</h4>
+                    <p>Get a simple, live score reflecting your current state.</p>
+                </div>
+                <div class="feature-card-classic">
+                     <div class="feature-icon">💡</div>
+                    <h4>Actionable Tips</h4>
+                    <p>Receive personalized recommendations based on analysis.</p>
+                </div>
+                 <div class="feature-card-classic">
+                     <div class="feature-icon">📊</div>
+                    <h4>History Tracking</h4>
+                    <p>Review past sessions and visualize your wellness trends.</p>
+                </div>
+                 <div class="feature-card-classic">
+                     <div class="feature-icon">👥</div>
+                    <h4>Team Features</h4>
+                    <p>Join teams and view anonymized group insights (Admins).</p>
+                </div>
+                 </div>
+        </div>
+    </section>
+
+     <section class="who-is-for-section section-padding">
+         <div class="container animate-slide-in">
+             <h2 class="section-title">Ideal For...</h2>
+             <div class="audience-grid">
+                 <div class="audience-item">👩‍💻 Remote Professionals</div>
+                 <div class="audience-item">🎓 Students & Learners</div>
+                 <div class="audience-item">🎮 Developers & Gamers</div>
+                 <div class="audience-item">🧘 Anyone Mindful</div>
+             </div>
+         </div>
+     </section>
+
+
+    <section class="cta-section section-padding">
+        <div class="container cta-content animate-slide-in">
+            <h2>Ready to Improve Your Screen Time?</h2>
+            <p>Launch the AI Health Mirror and start your journey towards better digital well-being today.</p>
+            <a href="{{ url_for('monitoring') }}" class="btn btn-cta">Get Started Now</a>
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    <div class="container">
+        <p>&copy; {% block year %}{{ current_year or '2025' }}{% endblock %} AI Health Mirror Project</p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+{# Add context processor if needed for year, or just hardcode it #}
+{% endblock %}

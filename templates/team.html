@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Team Management{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+<div class="container text-page-container" style="max-width: 600px;"> <h1 class="section-title animate-slide-in">Team Management</h1>
+
+    <div class="card animate-slide-in">
+        <h2>Team: {{ team.name }}</h2>
+        <div class="form-group">
+            <label for="invite-code">Team Invite Code</label>
+            <input type="text" id="invite-code" value="{{ team.invite_code }}" readonly>
+            <p style="margin-top: 0.2rem;"><small>Share this code to invite new members.</small></p>
+        </div>
+    </div>
+
+    <div class="card animate-slide-in">
+        <h2>Team Members</h2>
+        {% if team.users %}
+        <ul style="list-style: none; padding-left: 0;">
+            {% for user in team.users %}
+                <li style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                    {{ user.username }}
+                    {% if user.role == 'admin' %}
+                        <span style="font-weight: bold; color: var(--primary-color); margin-left: 10px;">(Admin)</span>
+                    {% endif %}
+                </li>
+            {% else %}
+                 <li style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">{{ current_user.username }} <span style="font-weight: bold; color: var(--primary-color); margin-left: 10px;">(Admin)</span></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No other members yet.</p>
+        {% endif %}
+    </div>
+</div>
+</section>
+{% endblock %}

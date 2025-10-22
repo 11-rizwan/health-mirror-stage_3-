@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block head_extra %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+    <div class="container admin-container">
+        <h1 class="section-title animate-slide-in">Administrator Dashboard</h1>
+         <p style="text-align: center; max-width: 600px; margin: -1.5rem auto 2rem auto; opacity: 0.8;" class="animate-slide-in">
+            Anonymized wellness overview for your team.
+        </p>
+
+        <div class="stats-grid animate-slide-in">
+            <div class="card stat-card">
+                <h3>Valid Sessions</h3><p id="total-sessions">--</p>
+            </div>
+            <div class="card stat-card">
+                <h3>Fatigue Events</h3><p id="total-fatigue">--</p>
+            </div>
+        </div>
+
+        <div class="card animate-slide-in">
+            <h2>Emotion Distribution</h2>
+            <div class="chart-container"><canvas id="emotion-chart"></canvas></div>
+        </div>
+
+        <div class="card animate-slide-in">
+            <h2>Average Score Trend</h2>
+            <div class="chart-container"><canvas id="score-trend-chart"></canvas></div>
+        </div>
+
+        <div class="card animate-slide-in">
+            <h2>Fatigue by Hour</h2>
+            <div class="chart-container"><canvas id="fatigue-hour-chart"></canvas></div>
+        </div>
+    </div>
+</section>
+<script src="{{ url_for('static', filename='admin.js') }}"></script>
+{% endblock %}

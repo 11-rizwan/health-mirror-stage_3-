@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+    <div class="container text-page-container">
+        <h1 class="section-title animate-slide-in">About the AI Health Mirror</h1>
+
+        <div class="card animate-slide-in">
+            <h2>Our Mission</h2>
+            <p>Our mission is to leverage the power of artificial intelligence to promote daily wellness and mindfulness. In a world where screen time is ever-increasing, it's easy to lose touch with our own emotional and physical state. The AI Health Mirror serves as a gentle, real-time companion to help you stay aware.</p>
+        </div>
+
+        <div class="card animate-slide-in">
+            <h2>Our Technology</h2>
+            <p>This application is built with a Python and Flask backend, running sophisticated computer vision models with TensorFlow and MediaPipe. The frontend is a responsive web interface created with HTML, CSS, and JavaScript, communicating with the server in real-time via WebSockets.</p>
+            <p>We prioritize privacy and process all video data locally within your browser or securely on the server without long-term storage of identifiable images.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
