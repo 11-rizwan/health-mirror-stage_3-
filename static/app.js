@@ -1,4 +1,4 @@
-// static/js/app.js (Corrected with Test Button Listener)
+// static/js/app.js (Corrected with Notification Tag Fix)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- WebSocket Connection ---
@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (permission === "granted") {
                     notificationPermissionGranted = true;
                     console.log("Notification permission granted by user.");
+                    // Show notification *without* a tag
                     showNotification("Notifications Enabled", "You'll now receive fatigue alerts.");
                 } else {
                     notificationPermissionGranted = false;
@@ -68,19 +69,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showNotification(title, body) {
-         console.log("Attempting to show notification:", title);
+    // --- MODIFIED FUNCTION ---
+    // The 'tag' is now an optional parameter
+    function showNotification(title, body, tag = null) {
+         console.log(`Attempting to show notification: "${title}", tag: ${tag}`);
          console.log("Permission granted?", notificationPermissionGranted);
         if (!notificationPermissionGranted) {
              console.log("Notification not shown: Permission not granted.");
              return;
         }
+
+        // Create a dynamic options object
+        const options = {
+            body: body,
+            icon: "/static/images/favicon.ico", // Optional
+        };
+
+        // Only add the tag if one was provided
+        if (tag) {
+            options.tag = tag;
+        }
+
         try {
-            const notification = new Notification(title, {
-                body: body,
-                icon: "/static/images/favicon.ico", // Optional
-                tag: "fatigue-alert-persistent"
-            });
+            // Use the new 'options' object
+            const notification = new Notification(title, options);
+             
              console.log("Notification object created.");
              notification.onclick = () => { window.focus(); };
              notification.onerror = (err) => { console.error("Notification Error:", err); };
@@ -88,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error creating notification:", err);
         }
     }
+    // --- END OF MODIFIED FUNCTION ---
+
 
     // --- Core Functions ---
     function startSession() {
@@ -226,7 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`Fatigue ongoing for ${elapsed}ms`);
                 if (elapsed >= FATIGUE_DURATION_THRESHOLD && !fatigueNotificationSent) {
                     console.log("Fatigue threshold reached! Triggering notification.");
-                    showNotification("Persistent Fatigue Alert!", "You've seemed tired for a while. Please take a break.");
+                    
+                    // --- MODIFIED LINE ---
+                    // Add the tag as the third argument for the persistent alert
+                    showNotification("Persistent Fatigue Alert!", "You've seemed tired for a while. Please take a break.", "fatigue-alert-persistent");
+                    // --- END OF MODIFIED LINE ---
+                    
                     fatigueNotificationSent = true;
                 }
             }
@@ -262,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startSessionBtn.addEventListener('click', startSession);
     endSessionBtn.addEventListener('click', endSession);
 
-    // --- !!! ADD THIS LISTENER FOR THE TEST BUTTON !!! ---
+    // --- Test Button Listener (No changes needed here) ---
     if (testNotificationBtn) {
         testNotificationBtn.addEventListener('click', () => {
             console.log("Test Notification button clicked."); // DEBUG
@@ -270,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Notification.permission === 'granted') {
                  notificationPermissionGranted = true; // Ensure flag is set
                  console.log("Permission is granted. Attempting test notification...");
+                 // This call correctly has NO tag, so it will always show
                  showNotification("Test Alert", "If you see this, notifications work!");
             } else if (Notification.permission === 'denied') {
                  console.log("Permission is denied. Cannot show test notification.");
