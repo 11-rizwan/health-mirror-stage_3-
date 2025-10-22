@@ -1,4 +1,4 @@
-// In static/js/app.js (Fully Refactored)
+// static/js/app.js (Corrected with Test Button Listener)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- WebSocket Connection ---
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startSessionBtn = document.getElementById('start-session-btn');
     const endSessionBtn = document.getElementById('end-session-btn');
     const saveStatus = document.getElementById('save-status');
+    const testNotificationBtn = document.getElementById('test-notification-btn'); // Get test button
 
     // UI elements for analysis data
     const emotionText = document.getElementById('emotion-text');
@@ -30,183 +31,215 @@ document.addEventListener('DOMContentLoaded', () => {
     let sessionData = {}; // Will be reset for each session
     let localStream = null;
 
-    // --- NEW: Notification State ---
+    // --- Notification State ---
     let notificationPermissionGranted = false;
-    let lastFatigueAlertState = false; // To track changes
-    // --- NEW: Fatigue Persistence Timer ---
-    let fatigueStartTime = null; // Timestamp when fatigue first detected
-    const FATIGUE_DURATION_THRESHOLD = 10000; // milliseconds (e.g., 10 seconds)
-    let fatigueNotificationSent = false; // Flag to prevent multiple notifications per event
-    // --- Core Functions ---
+    let lastFatigueAlertState = false;
+    let fatigueStartTime = null;
+    const FATIGUE_DURATION_THRESHOLD = 10000; // 10 seconds
+    let fatigueNotificationSent = false;
+
+    // --- Notification Functions ---
     function requestNotificationPermission() {
+        console.log("Checking notification permission...");
         if (!("Notification" in window)) {
-            console.log("This browser does not support desktop notification");
-        } else if (Notification.permission === "granted") {
+            console.log("Browser does not support notifications.");
+            return;
+        }
+        console.log("Current permission state:", Notification.permission);
+        if (Notification.permission === "granted") {
             notificationPermissionGranted = true;
             console.log("Notification permission already granted.");
         } else if (Notification.permission !== "denied") {
+            console.log("Requesting notification permission...");
             Notification.requestPermission().then(permission => {
+                console.log("Permission request result:", permission);
                 if (permission === "granted") {
                     notificationPermissionGranted = true;
-                    console.log("Notification permission granted.");
-                    // Optional: Show a confirmation notification
+                    console.log("Notification permission granted by user.");
                     showNotification("Notifications Enabled", "You'll now receive fatigue alerts.");
                 } else {
-                    console.log("Notification permission denied.");
+                    notificationPermissionGranted = false;
+                    console.log("Notification permission denied by user.");
                 }
             });
+        } else {
+             console.log("Notification permission was previously denied.");
+             notificationPermissionGranted = false;
         }
     }
+
     function showNotification(title, body) {
-        if (notificationPermissionGranted) {
-            new Notification(title, {
+         console.log("Attempting to show notification:", title);
+         console.log("Permission granted?", notificationPermissionGranted);
+        if (!notificationPermissionGranted) {
+             console.log("Notification not shown: Permission not granted.");
+             return;
+        }
+        try {
+            const notification = new Notification(title, {
                 body: body,
-                //icon: "/static/images/favicon.ico" // OPTIONAL: Add an icon path
+                icon: "/static/images/favicon.ico", // Optional
+                tag: "fatigue-alert-persistent"
             });
+             console.log("Notification object created.");
+             notification.onclick = () => { window.focus(); };
+             notification.onerror = (err) => { console.error("Notification Error:", err); };
+        } catch (err) {
+            console.error("Error creating notification:", err);
         }
     }
+
+    // --- Core Functions ---
     function startSession() {
-        console.log("Starting a new session...");
-        // Request permission when session starts (or page loads)
-        requestNotificationPermission();
-        // Reset session data
+        console.log("Starting new session...");
         sessionData = { scores: [], emotions: {}, fatigueEvents: 0 };
         saveStatus.innerText = '';
+        lastFatigueAlertState = false;
+        fatigueStartTime = null;
+        fatigueNotificationSent = false;
 
-        // Request webcam access
+        // Note: Permission is already requested on page load, 
+        // but we can re-check if needed.
+        if (notificationPermissionGranted === false && Notification.permission !== 'denied') {
+             requestNotificationPermission();
+        }
+
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
-                    localStream = stream; // Store the stream
+                    localStream = stream;
                     video.srcObject = stream;
                     video.play();
                     statusMessage.style.display = 'none';
                     sessionActive = true;
-                    
-                    // Start sending frames to the server
                     frameSenderInterval = setInterval(sendFrame, 100);
-
-                    // Update button states
                     startSessionBtn.style.display = 'none';
                     endSessionBtn.style.display = 'inline-block';
                     endSessionBtn.disabled = false;
                 })
                 .catch(err => {
-                    console.error("Error accessing webcam:", err);
+                    console.error("Webcam Error:", err);
                     statusMessage.innerText = "Could not access webcam. Please grant permission.";
+                    statusMessage.style.display = 'block';
                 });
+        } else {
+             statusMessage.innerText = "getUserMedia not supported by this browser.";
+             statusMessage.style.display = 'block';
         }
     }
 
     function endSession() {
         if (!sessionActive) return;
-        console.log("Ending session and saving data...");
-
-        // Stop sending frames and disable the button
+        console.log("Ending session...");
         sessionActive = false;
         clearInterval(frameSenderInterval);
         endSessionBtn.disabled = true;
         saveStatus.innerText = 'Analyzing and saving summary...';
 
-        // Stop the webcam tracks
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
             video.srcObject = null;
         }
 
-        // Calculate final summary
-        const avgScore = sessionData.scores.length > 0
-            ? Math.round(sessionData.scores.reduce((a, b) => a + b, 0) / sessionData.scores.length)
-            : 'N/A';
-        const dominantEmotion = Object.keys(sessionData.emotions).length > 0
-            ? Object.keys(sessionData.emotions).reduce((a, b) => sessionData.emotions[a] > sessionData.emotions[b] ? a : b)
-            : 'N/A';
+        const validScores = sessionData.scores.filter(score => typeof score === 'number' && !isNaN(score));
+        const avgScore = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : 'N/A';
+
+        const validEmotions = Object.entries(sessionData.emotions)
+                                  .filter(([key, value]) => key && key !== 'Analyzing...' && key !== 'Model Error' && key !== 'Looking for user...');
+        const dominantEmotion = validEmotions.length > 0 ? validEmotions.reduce((a, b) => a[1] > b[1] ? a : b)[0] : 'N/A';
 
         const summary = {
             avgScore: avgScore,
             dominantEmotion: dominantEmotion,
-            fatigueEvents: sessionData.fatigueEvents
+            fatigueEvents: sessionData.fatigueEvents || 0
         };
 
-        // Send summary to the server
-        console.log("Sending summary to server:", summary);
-        socket.emit('save_session', summary);
-        
-        // Update button states
+        if (summary.avgScore !== 'N/A' && summary.dominantEmotion !== 'N/A') {
+            console.log("Saving summary:", summary);
+            socket.emit('save_session', summary);
+        } else {
+             console.log("Skipping save due to invalid summary:", summary);
+             saveStatus.innerText = 'Session too short or invalid data detected. Not saved.';
+        }
+
         endSessionBtn.style.display = 'none';
         startSessionBtn.style.display = 'inline-block';
     }
 
     function sendFrame() {
-        if (!sessionActive) return;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-        socket.emit('frame', dataURL);
+        if (!sessionActive || video.paused || video.ended || video.readyState < 2) return;
+        try {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            socket.emit('frame', canvas.toDataURL('image/jpeg', 0.7));
+        } catch (err) {
+             console.error("Error sending frame:", err);
+        }
     }
 
     function aggregateData(data) {
-        if (typeof data.healthScore === 'number') sessionData.scores.push(data.healthScore);
-        const emotion = data.emotion;
-        sessionData.emotions[emotion] = (sessionData.emotions[emotion] || 0) + 1;
-        if (data.fatigueAlert) sessionData.fatigueEvents++;
+         if (typeof data.healthScore === 'number' && !isNaN(data.healthScore)) {
+             sessionData.scores.push(data.healthScore);
+         }
+         const validEmotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise'];
+         if (validEmotions.map(e => e.toLowerCase()).includes(data.emotion.toLowerCase())) {
+             sessionData.emotions[data.emotion] = (sessionData.emotions[data.emotion] || 0) + 1;
+         }
+         if (data.fatigueAlert) {
+             sessionData.fatigueEvents = (sessionData.fatigueEvents || 0) + 1;
+         }
     }
 
     function updateUI(data) {
-        // ... (The updateUI function from the previous step remains the same) ...
         if (emotionText.textContent !== data.emotion) {
             emotionText.textContent = data.emotion;
             emotionText.classList.add('pulse');
             setTimeout(() => emotionText.classList.remove('pulse'), 500);
         }
-        if (healthScore.textContent !== data.healthScore.toString()) {
-            healthScore.textContent = data.healthScore;
-            healthScore.classList.add('pulse');
-            setTimeout(() => healthScore.classList.remove('pulse'), 500);
+        let scoreText = data.healthScore !== undefined && data.healthScore !== null ? data.healthScore.toString() : 'N/A';
+        if (healthScore.textContent !== scoreText) {
+            healthScore.textContent = scoreText;
+            if(scoreText !== 'N/A'){
+                healthScore.classList.add('pulse');
+                setTimeout(() => healthScore.classList.remove('pulse'), 500);
+            }
         }
-        fatigueAlert.textContent = data.fatigueAlert ? 'YES' : 'NO';
-        fatigueCard.classList.toggle('alert', data.fatigueAlert);
         recommendationsList.innerHTML = '';
-        data.recommendations.forEach(rec => {
-            const li = document.createElement('li');
-            li.textContent = rec;
-            recommendationsList.appendChild(li);
-        });
-        // --- NEW: Trigger Notification on Fatigue Alert ---
+        if (data.recommendations) {
+            data.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+        }
+
         const currentFatigueAlertState = data.fatigueAlert;
         fatigueAlert.textContent = currentFatigueAlertState ? 'YES' : 'NO';
         fatigueCard.classList.toggle('alert', currentFatigueAlertState);
 
-        // --- Persistent Fatigue Notification Logic ---
         if (currentFatigueAlertState === true) {
-            // If fatigue just started, record the time
             if (fatigueStartTime === null) {
-                console.log("Fatigue period started."); // DEBUG
+                console.log("Fatigue period started.");
                 fatigueStartTime = Date.now();
-                fatigueNotificationSent = false; // Reset notification flag for new period
+                fatigueNotificationSent = false;
             } else {
-                // If fatigue persists, check duration
                 const elapsed = Date.now() - fatigueStartTime;
-                console.log(`Fatigue ongoing for ${elapsed}ms`); // DEBUG
-                // Check if threshold passed AND notification not already sent for this period
+                console.log(`Fatigue ongoing for ${elapsed}ms`);
                 if (elapsed >= FATIGUE_DURATION_THRESHOLD && !fatigueNotificationSent) {
-                    console.log("Fatigue threshold reached! Triggering notification."); // DEBUG
+                    console.log("Fatigue threshold reached! Triggering notification.");
                     showNotification("Persistent Fatigue Alert!", "You've seemed tired for a while. Please take a break.");
-                    fatigueNotificationSent = true; // Mark as sent for this period
+                    fatigueNotificationSent = true;
                 }
             }
         } else {
-            // If fatigue state is false, reset the timer
             if (fatigueStartTime !== null) {
-                console.log("Fatigue period ended."); // DEBUG
+                console.log("Fatigue period ended.");
             }
             fatigueStartTime = null;
-            // fatigueNotificationSent remains false until next event starts
         }
+        lastFatigueAlertState = currentFatigueAlertState;
     }
 
     // --- Event Listeners ---
-    
-    // Listen for server confirmation of saved session
     socket.on('session_saved', (response) => {
         if (response.status === 'success') {
             saveStatus.innerText = 'Session saved successfully!';
@@ -216,17 +249,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listen for data from the server and update UI
     socket.on('analysis_results', (data) => {
         if (!sessionActive) return;
-        updateUI(data);
-        aggregateData(data);
+        if(data && data.emotion !== undefined) {
+             updateUI(data);
+             aggregateData(data);
+        } else {
+             console.warn("Received invalid analysis results:", data);
+        }
     });
 
-    // Wire up the buttons
     startSessionBtn.addEventListener('click', startSession);
     endSessionBtn.addEventListener('click', endSession);
 
+    // --- !!! ADD THIS LISTENER FOR THE TEST BUTTON !!! ---
+    if (testNotificationBtn) {
+        testNotificationBtn.addEventListener('click', () => {
+            console.log("Test Notification button clicked."); // DEBUG
+
+            if (Notification.permission === 'granted') {
+                 notificationPermissionGranted = true; // Ensure flag is set
+                 console.log("Permission is granted. Attempting test notification...");
+                 showNotification("Test Alert", "If you see this, notifications work!");
+            } else if (Notification.permission === 'denied') {
+                 console.log("Permission is denied. Cannot show test notification.");
+                 alert("Notification permission is DENIED in your browser/OS settings. Please check the 🔒 icon.");
+            } else {
+                 console.log("Permission is default. Requesting permission first...");
+                 requestNotificationPermission(); // Ask for permission
+                 alert("Please grant notification permission in the browser pop-up, then click Test again.");
+            }
+        });
+    }
+    // --- End of Test Button Listener ---
+
+
     // --- Initial Call ---
-    startSession(); // Automatically start the first session on page load
+    requestNotificationPermission(); // Ask for permission on page load
+    startSession(); // Automatically start the first session
 });
