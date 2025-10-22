@@ -1,0 +1,21 @@
+# Image processing and computer vision
+opencv-python
+mediapipe
+numpy
+Pillow
+scipy
+
+# Machine learning
+tensorflow
+
+# Web framework
+Flask
+Flask-SocketIO
+Flask-SQLAlchemy
+Flask-Login
+
+# Security and utilities
+Werkzeug
+
+# Optional (to ensure compatibility across versions)
+eventlet  # Needed for Flask-SocketIO to work smoothly
